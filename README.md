@@ -31,14 +31,9 @@ This skill is designed for [OpenClaw](https://github.com/openclaw/openclaw).
     git clone https://github.com/Pangolin-spg/openclaw-skill-pangolinfo.git skills/pangolinfo
     ```
 
-2.  Install dependencies:
+2.  Configure your API Key (no `pip install` needed -- zero dependencies):
     ```bash
-    pip install -r skills/pangolinfo/requirements.txt
-    ```
-
-3.  Configure your API Key in `.env` or via OpenClaw config:
-    ```bash
-    export PANGOLINFO_API_KEY="your_api_key_here"
+    export PANGOLIN_API_KEY="your_api_key_here"
     ```
 
 ## 🛠️ Usage
@@ -53,39 +48,77 @@ Just ask your agent!
 
 ### Manual CLI Usage
 
-You can also run the scraper script directly:
+You can also run the scraper scripts directly (zero dependencies, Python 3.8+ stdlib only):
 
 ```bash
-# Scrape an Amazon product
-python scripts/scrape.py --url "https://www.amazon.com/dp/B09G9FPHY6"
+# Google AI Mode search (default, 2 credits)
+python scripts/pangolin_serp.py --q "what is quantum computing"
 
-# Scrape Google Search results
-python scripts/scrape.py --url "https://www.google.com/search?q=best+laptops+2025" --parser google
+# Google standard SERP (2 credits)
+python scripts/pangolin_serp.py --q "best laptops 2025" --mode serp
+
+# Google SERP Plus (cheaper, 1 credit)
+python scripts/pangolin_serp.py --q "best laptops 2025" --mode serp-plus
+
+# Amazon product detail by ASIN
+python scripts/pangolin_amazon.py --asin B0DYTF8L2W --site amz_us
+
+# Amazon keyword search
+python scripts/pangolin_amazon.py --q "wireless mouse" --site amz_us
+
+# Amazon product reviews (critical only)
+python scripts/pangolin_amazon.py --content B00163U4LK --mode review --filter-star critical
+
+# Amazon bestsellers
+python scripts/pangolin_amazon.py --content "electronics" --parser amzBestSellers --site amz_us
 ```
 
 ## 🧩 Supported Platforms
 
-| Platform | Features | Parser ID |
-| :--- | :--- | :--- |
-| **Google** | SERP, Titles, Descriptions, Rankings | `google` |
-| **Amazon** | Products, Search, Reviews, BSR, BuyBox | `amazon` |
-| **Walmart** | Products, Inventory, Sellers | `walmart` |
+| Platform | Features | Script | Parsers |
+| :--- | :--- | :--- | :--- |
+| **Google** | AI Mode, SERP, SERP Plus, AI Overviews, Screenshots | `pangolin_serp.py` | `googleAiSearch`, `googleSearch`, `googleSearchPlus` |
+| **Amazon** | Products, Search, Reviews, BSR, Bestsellers, Variants, 13 regions | `pangolin_amazon.py` | `amzProductDetail`, `amzKeyword`, `amzBestSellers`, `amzReviewV2`, + 5 more |
 
 ## 📄 Example Response
 
-OpenClaw will receive clean JSON like this:
+### Google AI Mode (pangolin_serp.py)
 
 ```json
 {
-  "title": "Sony WH-1000XM5 Wireless Noise Canceling Headphones",
-  "price": {
-    "current": 348.00,
-    "currency": "USD"
+  "success": true,
+  "task_id": "1768988520324-766a695d93b57aad",
+  "results_num": 1,
+  "ai_overview_count": 1,
+  "ai_overview": [
+    {
+      "content": ["Quantum computing uses quantum bits (qubits)..."],
+      "references": [
+        {
+          "title": "Quantum Computing - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Quantum_computing",
+          "domain": "Wikipedia"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Amazon Product Detail (pangolin_amazon.py)
+
+```json
+{
+  "success": true,
+  "task_id": "02b3e90810f0450ca6d41244d6009d0f",
+  "url": "https://www.amazon.com/dp/B0DYTF8L2W",
+  "metadata": {
+    "executionTime": 1791,
+    "parserType": "amzProductDetail",
+    "parsedAt": "2026-01-13T06:42:01.861Z"
   },
-  "rating": 4.6,
-  "reviews_count": 12450,
-  "availability": "In Stock",
-  "buybox_winner": "Amazon.com"
+  "results": [ ... ],
+  "results_count": 1
 }
 ```
 
